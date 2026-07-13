@@ -37,6 +37,12 @@ export function AdminHeader({ displayName, role }: AdminHeaderProps) {
             Colis
           </Link>
           <Link
+            href="/admin/contenu"
+            className="hidden min-h-[44px] items-center rounded-xl border border-stone-300 px-4 text-sm text-ink sm:flex"
+          >
+            Textes
+          </Link>
+          <Link
             href="/"
             className="hidden min-h-[44px] items-center rounded-xl border border-stone-300 px-4 text-sm text-ink sm:flex"
           >

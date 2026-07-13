@@ -11,9 +11,13 @@ Site web pour **Cécile Mackowiak**, artiste peintre. Objectif : présenter son 
 
 | Couche | Choix |
 |--------|-------|
-| Frontend | Next.js (App Router), TypeScript, Tailwind CSS |
-| Images | Optimisation Next/Image, formats WebP |
-| Paiement | Stripe (à intégrer — clés en `.env` uniquement) |
+| Frontend | Next.js 15 (App Router), TypeScript, Tailwind CSS |
+| Base de données | PostgreSQL via Supabase + Prisma 6 |
+| Auth admin | Supabase Auth (rôles `OWNER` / `ARTIST` dans `app_metadata`) |
+| Images | Supabase Storage + Next/Image |
+| Paiement | Stripe Checkout + webhooks (clés en `.env` uniquement) |
+| Expédition | Sendcloud + devis manuel (`MANUAL_QUOTE`) |
+| E-mails | Resend (clés en `.env` uniquement) |
 | Déploiement | Docker sur VPS Hostinger + Traefik |
 
 ## Ton & design
@@ -23,19 +27,36 @@ Site web pour **Cécile Mackowiak**, artiste peintre. Objectif : présenter son 
 - Mobile-first — beaucoup de visiteurs sur téléphone
 - Textes en **français** ; code et identifiants en anglais
 
-## Pages prévues
+## Pages publiques
 
-1. **Accueil** — hero + sélection d'œuvres
-2. **Galerie** — catalogue filtrable (technique, format, disponibilité)
-3. **Fiche œuvre** — photos, dimensions, prix, bouton achat / contact
-4. **Biographie** — parcours artistique
-5. **Contact** — formulaire + réseaux sociaux
+1. **Accueil** (`/`) — hero éditable + sélection d'œuvres
+2. **Galerie** (`/galerie`) — catalogue filtrable
+3. **Fiche œuvre** (`/tableaux/[slug]`) — photos, dimensions, prix, achat
+4. **L'artiste** (`/artiste`, alias `/biographie`) — biographie éditable
+5. **Contact** (`/contact`) — formulaire
+6. **Livraison**, pages légales, suivi commande
+
+## Espace admin (accès privé)
+
+- Connexion : `/admin/login` (pas de lien public dans le menu)
+- Tableau de bord : `/admin`
+- **Textes du site** : `/admin/contenu` → accueil (`/admin/contenu/accueil`) et biographie (`/admin/contenu/artiste`)
+- Tableaux, commandes, emballage : voir feuille de route
+
+L'artiste (`ARTIST`) peut gérer tableaux, commandes, colis **et** modifier les textes d'accueil / biographie.
+
+## Contenu éditorial
+
+- Stocké en base via table Prisma `Setting` (clés `content.homepage`, `content.artiste`)
+- Service : `src/services/content.service.ts`
+- Fallback : textes par défaut dans `src/lib/content/defaults.ts` si rien en base
+- Pattern admin : `actions.ts` + `requireAdminUser()` + `revalidatePath`
 
 ## Données personnelles
 
 - **Ne jamais** committer emails, téléphones, clés API, tokens Stripe
 - Garder `.gitignore` à jour avant tout push GitHub
-- Photos HD des tableaux : stocker hors repo ou via CDN/Storage
+- Photos HD des tableaux : Supabase Storage (hors repo)
 
 ## VPS Hostinger (infra partagée)
 
@@ -48,10 +69,11 @@ Site web pour **Cécile Mackowiak**, artiste peintre. Objectif : présenter son 
 | URL test | `https://cecile-mackowiak.srv962831.hstgr.cloud` |
 | MCP | `user-hostinger-vps` |
 
-Déploiement : `VPS_createNewProjectV1` avec le `docker-compose.yml` du repo.
+Déploiement : `VPS_createNewProjectV1` avec l'URL GitHub du repo + variables d'environnement (voir `docker-deploy.mdc`).
 
 ## Comportement agent
 
 - Agir directement (MCP Hostinger pour déploiement, pas d'instructions manuelles)
 - Modifications minimales, conventions Next.js existantes
 - Secrets uniquement dans `.env` (jamais dans les règles ni le code commité)
+- Après push : redéployer sur le VPS pour que la production reflète les changements

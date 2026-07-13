@@ -10,43 +10,55 @@ alwaysApply: false
 
 ```
 src/
-  app/           # Routes App Router
-  components/    # Composants réutilisables
-  lib/           # Utilitaires, types, données
-  data/          # Catalogue œuvres (JSON/TS jusqu'à CMS)
+  app/(public)/    # Site public (accueil, galerie, artiste…)
+  app/admin/       # Espace admin protégé
+  app/api/         # Routes API (checkout, webhooks, uploads)
+  components/      # Composants réutilisables (public + admin)
+  lib/             # Utilitaires, auth, contenu par défaut
+  services/        # Accès Prisma / logique métier
+  schemas/         # Validation Zod
+  types/           # Types TypeScript partagés
+prisma/schema.prisma
 public/
-  images/        # Assets statiques
 ```
 
 ## Composants
 
-- Composants fonctionnels, Server Components par défaut
-- `"use client"` uniquement pour interactivité (panier, filtres, formulaire)
-- Extraire hooks (`useCart`, `useGalleryFilter`) si logique réutilisée
+- Server Components par défaut
+- `"use client"` pour interactivité (formulaires admin, wizard tableaux, panier)
+- `"use server"` dans `actions.ts` pour mutations admin
+- Pattern formulaire admin : `useActionState` + retour `{ error?, success? }`
+
+## Données œuvres
+
+- Source : **Prisma** (`Artwork`, `ArtworkImage`) — pas de JSON statique
+- Service : `src/services/artwork.service.ts` / `public-artwork.service.ts`
+- Prix stockés en **centimes** en base, affichés en EUR avec `Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })`
+- Images : `next/image` avec `sizes` adaptés + Supabase Storage
+
+## Contenu éditorial (accueil, biographie)
+
+- Types : `src/types/content.ts` (`HomepageContent`, `ArtisteContent`)
+- Defaults : `src/lib/content/defaults.ts`
+- Service : `src/services/content.service.ts` (table `Setting`, clés JSON)
+- Schémas : `src/schemas/content.schema.ts`
+- Admin : `src/components/admin/SiteContentForms.tsx`
+- Pages publiques : fetch serveur via `getHomepageContent()` / `getArtisteContent()`
+- Biographie : paragraphes séparés par ligne vide dans le textarea admin
 
 ## Galerie & vente
 
-- Chaque œuvre : `id`, `title`, `description`, `price`, `dimensions`, `technique`, `images[]`, `available`
-- Images : `next/image` avec `sizes` adaptés au layout
-- Prix affichés en **EUR** (`Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })`)
+- Chaque œuvre : slug, title, description, priceCents, dimensions, technique, images, status
+- Statuts : `DRAFT`, `PUBLISHED`, `RESERVED`, `SOLD`, `ARCHIVED`
+- Une seule vente par tableau (réservation + webhook Stripe)
 
 ## Accessibilité
 
 - `alt` descriptif sur chaque tableau
 - Contraste suffisant, navigation clavier
-- Labels explicites sur les formulaires
+- Labels explicites sur les formulaires (`role="alert"` pour erreurs)
 
-## Exemple type œuvre
+## Admin — libellés utilisateur
 
-```typescript
-export type Artwork = {
-  id: string;
-  title: string;
-  description: string;
-  price: number;
-  dimensions: string;
-  technique: string;
-  images: string[];
-  available: boolean;
-};
-```
+Préférer le français simple : « Ajouter un tableau », « Enregistrer la biographie », « Textes du site ».
+Éviter le jargon technique dans l'interface artiste.

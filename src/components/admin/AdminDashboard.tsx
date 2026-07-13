@@ -28,6 +28,12 @@ const actions = [
     enabled: true,
   },
   {
+    href: "/admin/contenu",
+    label: "Modifier les textes du site",
+    description: "Page d'accueil et biographie",
+    enabled: true,
+  },
+  {
     href: "/admin/messages",
     label: "Voir les messages",
     description: "Demandes reçues depuis le site",

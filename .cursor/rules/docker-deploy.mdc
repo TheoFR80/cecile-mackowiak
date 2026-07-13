@@ -6,9 +6,17 @@ alwaysApply: false
 
 # Docker & déploiement VPS
 
+## Stratégie actuelle (pas de Dockerfile multi-stage)
+
+Le `docker-compose.yml` utilise `node:20-alpine` et **clone le repo GitHub** au démarrage du conteneur, puis `npm ci` → `npm run build` → `npm run start`.
+
+- Repo : `https://github.com/TheoFR80/cecile-mackowiak`
+- `NPM_CONFIG_PRODUCTION=false` pour inclure les devDependencies au build (Tailwind)
+- `output: 'standalone'` dans `next.config.ts` (warning `next start` non bloquant)
+
 ## Réseau Traefik
 
-Le VPS utilise le réseau externe `traefik-proxy`. Chaque service web expose des labels Traefik :
+Le VPS utilise le réseau externe `traefik-proxy`. Labels Traefik **avec variables d'environnement** (ne pas hardcoder les guillemets) :
 
 ```yaml
 labels:
@@ -24,27 +32,44 @@ networks:
 
 ## Variables d'environnement (déploiement MCP)
 
+**Obligatoires** (build + runtime pour Next.js et Supabase) :
+
 ```
 TRAEFIK_HOST=srv962831.hstgr.cloud
 COMPOSE_PROJECT_NAME=cecile-mackowiak
+NEXT_PUBLIC_SITE_URL=https://cecile-mackowiak.srv962831.hstgr.cloud
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+DATABASE_URL=
+DIRECT_URL=
+SUPABASE_SERVICE_ROLE_KEY=
+ADMIN_EMAIL=
 ```
+
+**Optionnelles** (selon fonctionnalités activées) : `STRIPE_*`, `SENDCLOUD_*`, `RESEND_API_KEY`, `EMAIL_FROM`.
+
+> `NEXT_PUBLIC_*` doivent être présentes **au build ET au runtime** — sinon auth admin et contenu échouent en production.
 
 ## Workflow déploiement
 
-1. Modifier `docker-compose.yml` localement
+1. Pousser les changements sur GitHub (`master`)
 2. MCP `VPS_createNewProjectV1` :
    - `virtualMachineId`: `962831`
    - `project_name`: `cecile-mackowiak`
-   - `content`: contenu YAML du compose
-   - `environment`: variables ci-dessus
-3. Vérifier : `VPS_getProjectListV1` puis `VPS_getProjectLogsV1`
+   - `content`: `https://github.com/TheoFR80/cecile-mackowiak`
+   - `environment`: toutes les variables ci-dessus (valeurs réelles, jamais dans le repo)
+3. Attendre le build (~2–3 min) puis vérifier :
+   - `https://cecile-mackowiak.srv962831.hstgr.cloud` → 200
+   - `/admin/login` → pas de bandeau Supabase
+4. Debug direct (temporaire) : `http://72.60.89.234:3001` (port `3001:3000`)
 
-## Build production
+## Build production — points d'attention
 
-- Multi-stage Dockerfile : `node:20-alpine` → build Next.js → `node:20-alpine` runner
-- `output: 'standalone'` dans `next.config.ts`
-- Ne pas exposer de port hôte — Traefik route le trafic HTTPS
+- Ne pas forcer `NODE_ENV=development` au build
+- `tailwindcss`, `postcss`, `autoprefixer` en **dependencies** (pas seulement devDependencies)
+- Pas de volume persistant `app-src` — chaque déploiement repart d'un clone frais
+- Healthcheck sur `http://127.0.0.1:3000`
 
-## Domaine custom (futur)
+## Domaine custom (phase 10)
 
-Ajouter une règle Traefik supplémentaire ou fichier dynamic dans `config/traefik/dynamic/` sur le VPS (ex. `cecile-mackowiak.fr`).
+Pour `cecile-mackowiak.fr` : enregistrements DNS vers le VPS + règle Traefik supplémentaire ou fichier dynamic dans `config/traefik/dynamic/` sur le VPS. Mettre à jour `NEXT_PUBLIC_SITE_URL` en conséquence.

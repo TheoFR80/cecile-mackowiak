@@ -7,9 +7,9 @@ alwaysApply: true
 
 ## Objectif V1 (section 23 CDC)
 
-Galerie, fiches tableaux, admin simple, photos, Stripe, commandes, tarifs transport, étiquettes, devis grands formats, e-mails, suivi, checklist emballage.
+Galerie, fiches tableaux, admin simple, photos, Stripe, commandes, tarifs transport, étiquettes, devis grands formats, e-mails, suivi, checklist emballage, **textes accueil et biographie éditables par l'artiste**.
 
-**Reporter** : comptes clients, newsletter, avis, multilingue, stats avancées.
+**Reporter** : comptes clients, newsletter, avis, multilingue, stats avancées, édition contact/livraison/légal.
 
 ## Phases (ordre strict)
 
@@ -25,6 +25,7 @@ Galerie, fiches tableaux, admin simple, photos, Stripe, commandes, tarifs transp
 | 8 | Notifications — e-mails client/artiste/admin | **terminée** (clés Resend requises) |
 | 9 | Sécurité & tests | **terminée** |
 | 10 | Production — domaine, monitoring, sauvegardes | **en cours** |
+| — | Contenu éditorial — accueil + biographie admin | **terminée** |
 
 ## Décisions verrouillées (CDC §24)
 
@@ -36,6 +37,7 @@ Galerie, fiches tableaux, admin simple, photos, Stripe, commandes, tarifs transp
 6. **Une seule vente** par tableau — réservation + webhook Stripe
 7. Envoi créé **après** confirmation « colis prêt » par l'artiste
 8. Interface `ShippingProvider` générique (Sendcloud + ManualQuote)
+9. Textes publics accueil/bio → table `Setting` (JSON), pas de CMS externe
 
 ## Stack
 
@@ -50,8 +52,8 @@ Galerie, fiches tableaux, admin simple, photos, Stripe, commandes, tarifs transp
 
 | Rôle | Accès |
 |------|-------|
-| `OWNER` | Tout + paramètres techniques |
-| `ARTIST` | Tableaux, commandes, étiquettes, emballage — pas les clés API |
+| `OWNER` | Tout + paramètres techniques (`Setting` sensibles) |
+| `ARTIST` | Tableaux, commandes, étiquettes, emballage, **textes accueil/biographie** — pas les clés API |
 | `CUSTOMER` | Compte facultatif (V2) |
 
 ## Règles métier critiques
@@ -61,6 +63,7 @@ Galerie, fiches tableaux, admin simple, photos, Stripe, commandes, tarifs transp
 - Webhooks **idempotents** (`webhook_events.externalEventId`)
 - Œuvre vendue → `SOLD` + archivage (pas de suppression)
 - Secrets uniquement dans `.env` — jamais commités
+- Contenu éditorial : validation Zod (`src/schemas/content.schema.ts`) avant enregistrement
 
 ## Arborescence cible
 
@@ -70,9 +73,31 @@ src/components/     src/lib/           src/services/   src/types/
 prisma/schema.prisma
 ```
 
+## Routes admin
+
+| Route | Rôle |
+|-------|------|
+| `/admin/login` | Auth |
+| `/admin` | Dashboard |
+| `/admin/tableaux`, `/admin/tableaux/nouveau`, `/admin/tableaux/[id]` | Œuvres |
+| `/admin/commandes`, `/admin/commandes/[id]` | Commandes |
+| `/admin/expeditions`, `/admin/expeditions/[orderId]` | Emballage |
+| `/admin/contenu` | Hub textes du site |
+| `/admin/contenu/accueil` | Hero page d'accueil |
+| `/admin/contenu/artiste` | Biographie |
+
+## Contenu éditorial (fait)
+
+- [x] `content.service.ts` — lecture/écriture `Setting`
+- [x] Clés `content.homepage` et `content.artiste`
+- [x] Defaults dans `src/lib/content/defaults.ts`
+- [x] Pages publiques branchées (`page.tsx`, `artiste/page.tsx`)
+- [x] Formulaires admin `SiteContentForms.tsx`
+- [x] `revalidatePath` après sauvegarde
+
 ## Phase 1 — fait / reste
 
-- [x] Schéma Prisma (14 tables)
+- [x] Schéma Prisma (14 tables + `Setting`)
 - [x] `.env.example` complet
 - [x] `ShippingProvider` + calcul colis
 - [x] Clients Supabase (browser, server, middleware)
@@ -84,7 +109,14 @@ prisma/schema.prisma
 - [x] Pousser schéma en base (`db:push` avec DATABASE_URL)
 - [x] Créer comptes OWNER + ARTIST dans Supabase (app_metadata.role)
 
+## Phase 10 — reste
+
+- [ ] Domaine custom `cecile-mackowiak.fr` (DNS + Traefik)
+- [ ] Retirer le port debug `3001:3000` une fois Traefik stable
+- [ ] Webhooks Stripe/Sendcloud en production
+- [ ] Monitoring et sauvegardes
+
 ## Libellés admin (§17)
 
-Utiliser : « Ajouter un tableau », « Publier le tableau », « Le colis est prêt ».
-Éviter : « Créer un enregistrement produit », « Soumettre le formulaire ».
+Utiliser : « Ajouter un tableau », « Publier le tableau », « Le colis est prêt », « Modifier les textes du site », « Enregistrer la page d'accueil », « Enregistrer la biographie ».
+Éviter : « Créer un enregistrement produit », « Soumettre le formulaire », jargon CMS technique.
