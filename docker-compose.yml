@@ -90,7 +90,7 @@ services:
 
       - traefik.docker.network=traefik-proxy
 
-      - traefik.http.routers.cecile-mackowiak.rule=Host(`cecile-mackowiak.srv962831.hstgr.cloud`)
+      - traefik.http.routers.cecile-mackowiak.rule=Host(\"cecile-mackowiak.srv962831.hstgr.cloud\")
 
       - traefik.http.routers.cecile-mackowiak.entrypoints=websecure
 
