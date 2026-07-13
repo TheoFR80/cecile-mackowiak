@@ -59,8 +59,11 @@ services:
           if [ ! -f package.json ]; then
             git clone --depth 1 https://github.com/TheoFR80/cecile-mackowiak.git .
           fi
-          npm ci --include=dev
+          export NODE_ENV=development
+          export NPM_CONFIG_PRODUCTION=false
+          npm ci
           npm run build
+          export NODE_ENV=production
           exec npm run start -- -p 3000 -H 0.0.0.0
 
     healthcheck:
