@@ -1,0 +1,70 @@
+# Compose de test — déployé via MCP Hostinger sans build local sur le VPS
+services:
+  web:
+    image: nginx:alpine
+    restart: unless-stopped
+    command:
+      - sh
+      - -c
+      - |
+        cat > /usr/share/nginx/html/index.html <<'HTML'
+        <!DOCTYPE html>
+        <html lang="fr">
+        <head>
+          <meta charset="UTF-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Cécile Mackowiak — Test déploiement</title>
+          <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            body {
+              min-height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-family: Georgia, serif;
+              background: #faf8f5;
+              color: #2c2c2c;
+            }
+            .card {
+              text-align: center;
+              padding: 3rem;
+              max-width: 32rem;
+            }
+            h1 { font-size: 2rem; margin-bottom: 1rem; }
+            p { color: #78716c; line-height: 1.6; margin-bottom: 0.5rem; }
+            .badge {
+              display: inline-block;
+              margin-top: 1.5rem;
+              padding: 0.5rem 1.25rem;
+              background: #8b7355;
+              color: white;
+              border-radius: 9999px;
+              font-family: system-ui, sans-serif;
+              font-size: 0.875rem;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="card">
+            <h1>Cécile Mackowiak</h1>
+            <p>Site artiste peintre — conteneur Docker de test</p>
+            <p>Traefik + HTTPS opérationnels sur le VPS Hostinger.</p>
+            <span class="badge">✓ Déploiement réussi</span>
+          </div>
+        </body>
+        </html>
+        HTML
+        exec nginx -g 'daemon off;'
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-proxy
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.rule=Host(`${COMPOSE_PROJECT_NAME}.${TRAEFIK_HOST}`)
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+      - traefik.http.services.${COMPOSE_PROJECT_NAME}.loadbalancer.server.port=80
+    networks:
+      - traefik-proxy
+
+networks:
+  traefik-proxy:
+    external: true

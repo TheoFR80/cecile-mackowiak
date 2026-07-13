@@ -1,0 +1,50 @@
+---
+description: Déploiement Docker sur VPS Hostinger via Traefik
+globs: "**/docker-compose*.yml,Dockerfile*"
+alwaysApply: false
+---
+
+# Docker & déploiement VPS
+
+## Réseau Traefik
+
+Le VPS utilise le réseau externe `traefik-proxy`. Chaque service web expose des labels Traefik :
+
+```yaml
+labels:
+  - traefik.enable=true
+  - traefik.docker.network=traefik-proxy
+  - traefik.http.routers.${COMPOSE_PROJECT_NAME}.rule=Host(`${COMPOSE_PROJECT_NAME}.${TRAEFIK_HOST}`)
+  - traefik.http.routers.${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+  - traefik.http.routers.${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+  - traefik.http.services.${COMPOSE_PROJECT_NAME}.loadbalancer.server.port=3000
+networks:
+  - traefik-proxy
+```
+
+## Variables d'environnement (déploiement MCP)
+
+```
+TRAEFIK_HOST=srv962831.hstgr.cloud
+COMPOSE_PROJECT_NAME=cecile-mackowiak
+```
+
+## Workflow déploiement
+
+1. Modifier `docker-compose.yml` localement
+2. MCP `VPS_createNewProjectV1` :
+   - `virtualMachineId`: `962831`
+   - `project_name`: `cecile-mackowiak`
+   - `content`: contenu YAML du compose
+   - `environment`: variables ci-dessus
+3. Vérifier : `VPS_getProjectListV1` puis `VPS_getProjectLogsV1`
+
+## Build production
+
+- Multi-stage Dockerfile : `node:20-alpine` → build Next.js → `node:20-alpine` runner
+- `output: 'standalone'` dans `next.config.ts`
+- Ne pas exposer de port hôte — Traefik route le trafic HTTPS
+
+## Domaine custom (futur)
+
+Ajouter une règle Traefik supplémentaire ou fichier dynamic dans `config/traefik/dynamic/` sur le VPS (ex. `cecile-mackowiak.fr`).

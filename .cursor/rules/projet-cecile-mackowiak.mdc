@@ -1,0 +1,57 @@
+---
+description: Contexte global — site vitrine & boutique de tableaux Cécile Mackowiak
+alwaysApply: true
+---
+
+# Cécile Mackowiak — site artiste peintre
+
+Site web pour **Cécile Mackowiak**, artiste peintre. Objectif : présenter son univers, exposer ses œuvres et **vendre ses tableaux** en ligne.
+
+## Stack cible
+
+| Couche | Choix |
+|--------|-------|
+| Frontend | Next.js (App Router), TypeScript, Tailwind CSS |
+| Images | Optimisation Next/Image, formats WebP |
+| Paiement | Stripe (à intégrer — clés en `.env` uniquement) |
+| Déploiement | Docker sur VPS Hostinger + Traefik |
+
+## Ton & design
+
+- Élégant, épuré, **mettre les tableaux en avant** (grande place aux visuels)
+- Palette sobre : fond clair ou blanc cassé, typographie serif pour titres
+- Mobile-first — beaucoup de visiteurs sur téléphone
+- Textes en **français** ; code et identifiants en anglais
+
+## Pages prévues
+
+1. **Accueil** — hero + sélection d'œuvres
+2. **Galerie** — catalogue filtrable (technique, format, disponibilité)
+3. **Fiche œuvre** — photos, dimensions, prix, bouton achat / contact
+4. **Biographie** — parcours artistique
+5. **Contact** — formulaire + réseaux sociaux
+
+## Données personnelles
+
+- **Ne jamais** committer emails, téléphones, clés API, tokens Stripe
+- Garder `.gitignore` à jour avant tout push GitHub
+- Photos HD des tableaux : stocker hors repo ou via CDN/Storage
+
+## VPS Hostinger (infra partagée)
+
+| Élément | Valeur |
+|---------|--------|
+| VPS ID (MCP) | `962831` |
+| IP | `72.60.89.234` |
+| Traefik | `*.srv962831.hstgr.cloud` (HTTPS Let's Encrypt) |
+| Projet Docker | `cecile-mackowiak` |
+| URL test | `https://cecile-mackowiak.srv962831.hstgr.cloud` |
+| MCP | `user-hostinger-vps` |
+
+Déploiement : `VPS_createNewProjectV1` avec le `docker-compose.yml` du repo.
+
+## Comportement agent
+
+- Agir directement (MCP Hostinger pour déploiement, pas d'instructions manuelles)
+- Modifications minimales, conventions Next.js existantes
+- Secrets uniquement dans `.env` (jamais dans les règles ni le code commité)

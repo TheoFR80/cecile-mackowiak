@@ -1,0 +1,366 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum UserRole {
+  OWNER
+  ARTIST
+  CUSTOMER
+}
+
+enum ArtworkStatus {
+  DRAFT
+  PUBLISHED
+  RESERVED
+  SOLD
+  ARCHIVED
+}
+
+enum ShippingClass {
+  STANDARD
+  OVERSIZE
+  QUOTE_REQUIRED
+}
+
+enum PaymentStatus {
+  PENDING_PAYMENT
+  PAID
+  FAILED
+  REFUNDED
+  DISPUTED
+}
+
+enum FulfillmentStatus {
+  PENDING
+  PREPARING
+  READY
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum ShippingStatus {
+  PENDING
+  LABEL_CREATED
+  READY_FOR_PICKUP
+  PICKUP_SCHEDULED
+  PICKED_UP
+  IN_TRANSIT
+  OUT_FOR_DELIVERY
+  DELIVERED
+  DELIVERY_FAILED
+  RETURNED
+  DAMAGED
+  CANCELLED
+}
+
+enum PickupStatus {
+  NOT_REQUESTED
+  SCHEDULED
+  COMPLETED
+  FAILED
+}
+
+enum ShipmentProvider {
+  SENDCLOUD
+  MANUAL_QUOTE
+}
+
+enum PackingPhotoType {
+  ARTWORK_BEFORE_PACKING
+  PACKING_IN_PROGRESS
+  SEALED_PACKAGE
+  LABEL_ATTACHED
+}
+
+enum ContactMessageStatus {
+  NEW
+  READ
+  REPLIED
+  ARCHIVED
+}
+
+enum WebhookProvider {
+  STRIPE
+  SENDCLOUD
+}
+
+model User {
+  id          String    @id @db.Uuid
+  email       String    @unique
+  displayName String?
+  role        UserRole  @default(CUSTOMER)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  lastLoginAt DateTime?
+  isActive    Boolean   @default(true)
+
+  packingChecklists PackingChecklist[]
+
+  @@map("users")
+}
+
+model Artwork {
+  id               String        @id @default(cuid())
+  slug             String        @unique
+  title            String
+  description      String        @db.Text
+  priceCents       Int
+  currency         String        @default("EUR")
+  year             Int?
+  technique        String?
+  support          String?
+  category         String?
+  orientation      String?
+  isFramed         Boolean       @default(false)
+  hasCertificate   Boolean       @default(false)
+  isSigned         Boolean       @default(true)
+  widthCm          Float?
+  heightCm         Float?
+  depthCm          Float?
+  weightKg         Float?
+  packageWidthCm   Float?
+  packageHeightCm  Float?
+  packageDepthCm   Float?
+  packageWeightKg  Float?
+  shippingClass    ShippingClass @default(STANDARD)
+  status           ArtworkStatus @default(DRAFT)
+  featured         Boolean       @default(false)
+  publishedAt      DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  images       ArtworkImage[]
+  orders       Order[]
+  reservations Reservation[]
+  contactMessages ContactMessage[]
+
+  @@map("artworks")
+}
+
+model ArtworkImage {
+  id           String   @id @default(cuid())
+  artworkId    String
+  url          String
+  thumbnailUrl String?
+  publicId     String?
+  altText      String?
+  position     Int      @default(0)
+  isPrimary    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+
+  artwork Artwork @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+
+  @@index([artworkId])
+  @@map("artwork_images")
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  addresses Address[]
+  orders    Order[]
+
+  @@map("customers")
+}
+
+model Address {
+  id          String   @id @default(cuid())
+  customerId  String?
+  firstName   String
+  lastName    String
+  company     String?
+  street1     String
+  street2     String?
+  postalCode  String
+  city        String
+  region      String?
+  countryCode String   @db.Char(2)
+  phone       String?
+  createdAt   DateTime @default(now())
+
+  customer       Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  shippingOrders Order[]
+
+  @@map("addresses")
+}
+
+model Order {
+  id                      String            @id @default(cuid())
+  orderNumber             String            @unique
+  customerId              String?
+  artworkId               String
+  shippingAddressId       String?
+  artworkPriceCents       Int
+  shippingPriceCents      Int               @default(0)
+  shippingMethodId        String?
+  shippingCarrier         String?
+  shippingServiceName     String?
+  insurancePriceCents     Int               @default(0)
+  totalCents              Int
+  currency                String            @default("EUR")
+  paymentStatus           PaymentStatus     @default(PENDING_PAYMENT)
+  fulfillmentStatus       FulfillmentStatus @default(PENDING)
+  shippingStatus          ShippingStatus    @default(PENDING)
+  stripeCheckoutSessionId String?           @unique
+  stripePaymentIntentId   String?
+  paidAt                  DateTime?
+  cancelledAt             DateTime?
+  refundedAt              DateTime?
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+
+  customer        Customer?         @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  artwork         Artwork           @relation(fields: [artworkId], references: [id])
+  shippingAddress Address?          @relation(fields: [shippingAddressId], references: [id], onDelete: SetNull)
+  shipment        Shipment?
+  packingChecklist PackingChecklist?
+
+  @@index([artworkId])
+  @@index([customerId])
+  @@map("orders")
+}
+
+model Shipment {
+  id                 String           @id @default(cuid())
+  orderId            String           @unique
+  provider           ShipmentProvider @default(SENDCLOUD)
+  providerShipmentId String?
+  carrier            String?
+  serviceName        String?
+  shippingMethodId   String?
+  trackingNumber     String?
+  trackingUrl        String?
+  labelUrl           String?
+  status             ShippingStatus   @default(PENDING)
+  pickupStatus       PickupStatus     @default(NOT_REQUESTED)
+  pickupDate         DateTime?
+  priceCents         Int?
+  insuredValueCents  Int?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  order  Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  events ShipmentEvent[]
+
+  @@map("shipments")
+}
+
+model ShipmentEvent {
+  id               String         @id @default(cuid())
+  shipmentId       String
+  providerEventId  String?
+  providerStatus   String?
+  internalStatus   ShippingStatus
+  message          String?
+  eventDate        DateTime
+  payload          Json?
+  createdAt        DateTime       @default(now())
+
+  shipment Shipment @relation(fields: [shipmentId], references: [id], onDelete: Cascade)
+
+  @@index([shipmentId])
+  @@map("shipment_events")
+}
+
+model Reservation {
+  id                      String   @id @default(cuid())
+  artworkId               String
+  stripeCheckoutSessionId String?  @unique
+  expiresAt               DateTime
+  createdAt               DateTime @default(now())
+
+  artwork Artwork @relation(fields: [artworkId], references: [id], onDelete: Cascade)
+
+  @@index([artworkId])
+  @@index([expiresAt])
+  @@map("reservations")
+}
+
+model PackingChecklist {
+  id                    String    @id @default(cuid())
+  orderId               String    @unique
+  artworkPhotographed   Boolean   @default(false)
+  certificateAdded      Boolean   @default(false)
+  cornersProtected      Boolean   @default(false)
+  surfaceProtected      Boolean   @default(false)
+  innerProtectionAdded  Boolean   @default(false)
+  reinforcedBoxUsed     Boolean   @default(false)
+  emptySpacesFilled     Boolean   @default(false)
+  packageClosed         Boolean   @default(false)
+  labelAttached         Boolean   @default(false)
+  completedAt           DateTime?
+  completedByUserId     String?   @db.Uuid
+  createdAt             DateTime  @default(now())
+
+  order       Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  completedBy User?          @relation(fields: [completedByUserId], references: [id], onDelete: SetNull)
+  photos      PackingPhoto[]
+
+  @@map("packing_checklists")
+}
+
+model PackingPhoto {
+  id                 String           @id @default(cuid())
+  packingChecklistId String
+  type               PackingPhotoType
+  url                String
+  createdAt          DateTime         @default(now())
+
+  checklist PackingChecklist @relation(fields: [packingChecklistId], references: [id], onDelete: Cascade)
+
+  @@index([packingChecklistId])
+  @@map("packing_photos")
+}
+
+model ContactMessage {
+  id        String               @id @default(cuid())
+  name      String
+  email     String
+  subject   String?
+  message   String               @db.Text
+  artworkId String?
+  status    ContactMessageStatus @default(NEW)
+  createdAt DateTime             @default(now())
+
+  artwork Artwork? @relation(fields: [artworkId], references: [id], onDelete: SetNull)
+
+  @@map("contact_messages")
+}
+
+model WebhookEvent {
+  id              String          @id @default(cuid())
+  provider        WebhookProvider
+  externalEventId String
+  eventType       String
+  payload         Json
+  processed       Boolean         @default(false)
+  processedAt     DateTime?
+  errorMessage    String?
+  createdAt       DateTime        @default(now())
+
+  @@unique([provider, externalEventId])
+  @@map("webhook_events")
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  encrypted Boolean  @default(false)
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}

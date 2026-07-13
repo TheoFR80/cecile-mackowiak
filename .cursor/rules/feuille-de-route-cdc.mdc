@@ -1,0 +1,90 @@
+---
+description: Feuille de route CDC — phases, priorités et état d'avancement du projet
+alwaysApply: true
+---
+
+# Feuille de route — Cécile Mackowiak
+
+## Objectif V1 (section 23 CDC)
+
+Galerie, fiches tableaux, admin simple, photos, Stripe, commandes, tarifs transport, étiquettes, devis grands formats, e-mails, suivi, checklist emballage.
+
+**Reporter** : comptes clients, newsletter, avis, multilingue, stats avancées.
+
+## Phases (ordre strict)
+
+| # | Phase | Statut |
+|---|-------|--------|
+| 1 | Fondation — Next.js, Prisma, Supabase, auth, rôles | **terminée** |
+| 2 | Admin tableaux — assistant 5 étapes, upload photos | **terminée** |
+| 3 | Site public — fiches, livraison, légal, SEO | **terminée** |
+| 4 | Commandes — panier, réservation œuvre unique | **terminée** |
+| 5 | Stripe — Checkout + webhooks idempotents | **terminée** (clés `.env` requises) |
+| 6 | Expédition — Sendcloud + devis manuel | **terminée** (clés `.env` requises) |
+| 7 | Emballage — checklist + photos preuve | **terminée** |
+| 8 | Notifications — e-mails client/artiste/admin | **terminée** (clés Resend requises) |
+| 9 | Sécurité & tests | **terminée** |
+| 10 | Production — domaine, monitoring, sauvegardes | **en cours** |
+
+## Décisions verrouillées (CDC §24)
+
+1. Sendcloud multitransporteur (pas Chronopost/UPS/DHL séparés)
+2. Mode `MANUAL_QUOTE` pour très grands tableaux
+3. Frais livraison payés par l'acheteur (offre possible par admin)
+4. Dimensions **emballées** obligatoires, pas seulement œuvre
+5. Photos avant/après emballage
+6. **Une seule vente** par tableau — réservation + webhook Stripe
+7. Envoi créé **après** confirmation « colis prêt » par l'artiste
+8. Interface `ShippingProvider` générique (Sendcloud + ManualQuote)
+
+## Stack
+
+- **App** : Next.js 15 App Router, TypeScript, Tailwind, Prisma 6
+- **Auth** : Supabase Auth — rôles dans `app_metadata` (jamais `user_metadata`)
+- **DB** : PostgreSQL via Supabase
+- **Paiement** : Stripe Checkout + webhooks signés
+- **Transport** : Sendcloud + `ManualQuoteShippingProvider`
+- **Deploy** : Docker VPS Hostinger + Traefik (pas Vercel)
+
+## Rôles
+
+| Rôle | Accès |
+|------|-------|
+| `OWNER` | Tout + paramètres techniques |
+| `ARTIST` | Tableaux, commandes, étiquettes, emballage — pas les clés API |
+| `CUSTOMER` | Compte facultatif (V2) |
+
+## Règles métier critiques
+
+- Prix en **centimes** côté serveur — ne jamais faire confiance au client
+- Vente confirmée **uniquement** par webhook Stripe signé
+- Webhooks **idempotents** (`webhook_events.externalEventId`)
+- Œuvre vendue → `SOLD` + archivage (pas de suppression)
+- Secrets uniquement dans `.env` — jamais commités
+
+## Arborescence cible
+
+```
+src/app/(public)/   src/app/admin/   src/app/api/
+src/components/     src/lib/           src/services/   src/types/
+prisma/schema.prisma
+```
+
+## Phase 1 — fait / reste
+
+- [x] Schéma Prisma (14 tables)
+- [x] `.env.example` complet
+- [x] `ShippingProvider` + calcul colis
+- [x] Clients Supabase (browser, server, middleware)
+- [x] Middleware protection `/admin`
+- [x] Page `/admin/login` + rôles OWNER/ARTIST
+- [x] Migration SQL RLS + sync users (`supabase/migrations/`)
+- [x] RLS complète phase 9 (`supabase/migrations/002_complete_rls.sql`)
+- [x] Tests unitaires Vitest (`npm test`)
+- [x] Pousser schéma en base (`db:push` avec DATABASE_URL)
+- [x] Créer comptes OWNER + ARTIST dans Supabase (app_metadata.role)
+
+## Libellés admin (§17)
+
+Utiliser : « Ajouter un tableau », « Publier le tableau », « Le colis est prêt ».
+Éviter : « Créer un enregistrement produit », « Soumettre le formulaire ».

@@ -1,0 +1,52 @@
+---
+description: Conventions frontend Next.js pour le site Cécile Mackowiak
+globs: "**/*.{tsx,ts,css}"
+alwaysApply: false
+---
+
+# Frontend Next.js
+
+## Structure
+
+```
+src/
+  app/           # Routes App Router
+  components/    # Composants réutilisables
+  lib/           # Utilitaires, types, données
+  data/          # Catalogue œuvres (JSON/TS jusqu'à CMS)
+public/
+  images/        # Assets statiques
+```
+
+## Composants
+
+- Composants fonctionnels, Server Components par défaut
+- `"use client"` uniquement pour interactivité (panier, filtres, formulaire)
+- Extraire hooks (`useCart`, `useGalleryFilter`) si logique réutilisée
+
+## Galerie & vente
+
+- Chaque œuvre : `id`, `title`, `description`, `price`, `dimensions`, `technique`, `images[]`, `available`
+- Images : `next/image` avec `sizes` adaptés au layout
+- Prix affichés en **EUR** (`Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })`)
+
+## Accessibilité
+
+- `alt` descriptif sur chaque tableau
+- Contraste suffisant, navigation clavier
+- Labels explicites sur les formulaires
+
+## Exemple type œuvre
+
+```typescript
+export type Artwork = {
+  id: string;
+  title: string;
+  description: string;
+  price: number;
+  dimensions: string;
+  technique: string;
+  images: string[];
+  available: boolean;
+};
+```
