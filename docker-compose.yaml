@@ -1,0 +1,102 @@
+services:
+
+  web:
+
+    build:
+
+      context: .
+
+      args:
+
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
+
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+
+        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
+
+    restart: unless-stopped
+
+    environment:
+
+      NODE_ENV: production
+
+      DATABASE_URL: ${DATABASE_URL}
+
+      DIRECT_URL: ${DIRECT_URL}
+
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY:-}
+
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+
+      SENDCLOUD_PUBLIC_KEY: ${SENDCLOUD_PUBLIC_KEY:-}
+
+      SENDCLOUD_SECRET_KEY: ${SENDCLOUD_SECRET_KEY:-}
+
+      SENDCLOUD_WEBHOOK_SECRET: ${SENDCLOUD_WEBHOOK_SECRET:-}
+
+      SENDCLOUD_SENDER_FIRST_NAME: ${SENDCLOUD_SENDER_FIRST_NAME:-}
+
+      SENDCLOUD_SENDER_LAST_NAME: ${SENDCLOUD_SENDER_LAST_NAME:-}
+
+      SENDCLOUD_SENDER_STREET: ${SENDCLOUD_SENDER_STREET:-}
+
+      SENDCLOUD_SENDER_POSTAL_CODE: ${SENDCLOUD_SENDER_POSTAL_CODE:-}
+
+      SENDCLOUD_SENDER_CITY: ${SENDCLOUD_SENDER_CITY:-}
+
+      SENDCLOUD_SENDER_COUNTRY: ${SENDCLOUD_SENDER_COUNTRY:-FR}
+
+      SENDCLOUD_SENDER_EMAIL: ${SENDCLOUD_SENDER_EMAIL:-}
+
+      SENDCLOUD_SENDER_PHONE: ${SENDCLOUD_SENDER_PHONE:-}
+
+      EMAIL_FROM: ${EMAIL_FROM:-}
+
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://127.0.0.1:3000').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))\"",
+        ]
+      interval: 30s
+
+      timeout: 10s
+
+      retries: 3
+
+      start_period: 40s
+
+    labels:
+
+      - traefik.enable=true
+
+      - traefik.docker.network=traefik-proxy
+
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.rule=Host(`${COMPOSE_PROJECT_NAME}.${TRAEFIK_HOST}`)
+
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.entrypoints=websecure
+
+      - traefik.http.routers.${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt
+
+      - traefik.http.services.${COMPOSE_PROJECT_NAME}.loadbalancer.server.port=3000
+
+    networks:
+
+      - traefik-proxy
+
+
+
+networks:
+
+  traefik-proxy:
+
+    external: true
+
