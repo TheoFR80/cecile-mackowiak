@@ -60,14 +60,12 @@ services:
             git fetch --depth 1 origin master
             git reset --hard FETCH_HEAD
           fi
-          export NODE_ENV=development
           export NPM_CONFIG_PRODUCTION=false
           npm ci
           if ! npm ls tailwindcss >/dev/null 2>&1; then
             npm install --no-save tailwindcss postcss autoprefixer
           fi
           npm run build
-          export NODE_ENV=production
           exec npm run start -- -p 3000 -H 0.0.0.0
 
     healthcheck:
