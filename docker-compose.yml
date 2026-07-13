@@ -58,6 +58,9 @@ services:
           apk add --no-cache git
           if [ ! -f package.json ]; then
             git clone --depth 1 https://github.com/TheoFR80/cecile-mackowiak.git .
+          else
+            git fetch --depth 1 origin master
+            git reset --hard FETCH_HEAD
           fi
           export NODE_ENV=development
           export NPM_CONFIG_PRODUCTION=false
