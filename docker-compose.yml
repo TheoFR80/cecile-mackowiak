@@ -1,22 +1,12 @@
 services:
 
   web:
-
-    build:
-
-      context: .
-
-      args:
-
-        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
-
-        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
-
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-
-        NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY:-}
+    image: node:20-alpine
 
     restart: unless-stopped
+    working_dir: /app
+    volumes:
+      - app-src:/app
 
     environment:
 
@@ -60,6 +50,19 @@ services:
 
       ADMIN_EMAIL: ${ADMIN_EMAIL:-}
 
+    command:
+      - sh
+      - -lc
+      - |
+          set -e
+          apk add --no-cache git
+          if [ ! -f package.json ]; then
+            git clone --depth 1 https://github.com/TheoFR80/cecile-mackowiak.git .
+          fi
+          npm ci
+          npm run build
+          exec npm run start -- -p 3000 -H 0.0.0.0
+
     healthcheck:
       test:
         [
@@ -99,4 +102,7 @@ networks:
   traefik-proxy:
 
     external: true
+
+volumes:
+  app-src:
 
