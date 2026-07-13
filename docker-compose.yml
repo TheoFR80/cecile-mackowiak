@@ -5,8 +5,6 @@ services:
 
     restart: unless-stopped
     working_dir: /app
-    volumes:
-      - app-src:/app
 
     environment:
 
@@ -113,5 +111,3 @@ networks:
     external: true
 
 volumes:
-  app-src:
-
