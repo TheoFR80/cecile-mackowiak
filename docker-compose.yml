@@ -92,7 +92,11 @@ services:
 
       - traefik.http.routers.cecile-mackowiak.entrypoints=websecure
 
+      - traefik.http.routers.cecile-mackowiak.tls=true
+
       - traefik.http.routers.cecile-mackowiak.tls.certresolver=letsencrypt
+
+      - traefik.http.routers.cecile-mackowiak.service=cecile-mackowiak
 
       - traefik.http.services.cecile-mackowiak.loadbalancer.server.port=3000
 
