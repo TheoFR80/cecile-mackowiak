@@ -1,0 +1,36 @@
+---
+description: Sécurité — secrets, données personnelles, Git et RLS
+alwaysApply: true
+---
+
+# Sécurité & données personnelles
+
+## Interdictions absolues (GitHub)
+
+- **Ne jamais** committer : `.env`, clés API, mots de passe DB, tokens Stripe/Sendcloud/Resend
+- **Ne jamais** committer : emails/téléphones réels, photos HD tableaux, credentials
+- Vérifier `.gitignore` avant tout push (`Push` utilisateur)
+
+## Fichiers sensibles
+
+```
+.env          → ignoré (modèle : .env.example sans valeurs)
+node_modules/ → ignoré
+.next/        → ignoré
+```
+
+## Rôles Supabase
+
+- Rôles **uniquement** dans `app_metadata.role` — jamais `user_metadata`
+- `OWNER` : paramètres techniques ; `ARTIST` : gestion quotidienne sans clés API
+
+## Webhooks
+
+- Stripe : signature `stripe-signature` obligatoire
+- Sendcloud : HMAC `Sendcloud-Signature`
+- Idempotence : table `webhook_events` (`provider` + `externalEventId`)
+
+## Agent
+
+- Secrets uniquement dans `.env` local et variables VPS MCP — jamais dans les règles ni le code commité
+- Ne pas afficher les valeurs des clés dans les réponses utilisateur

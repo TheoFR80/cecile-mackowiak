@@ -1,0 +1,39 @@
+---
+description: Prisma & PostgreSQL — schéma, services et conventions données
+globs: "prisma/**,src/services/**,src/lib/database/**"
+alwaysApply: false
+---
+
+# Prisma & base de données
+
+## Client
+
+- Singleton : `src/lib/database/client.ts`
+- Connexion pooler : `DATABASE_URL` (pgbouncer, port 6543)
+- Migrations directes : `DIRECT_URL` (port 5432)
+
+## Tables principales
+
+| Table | Rôle |
+|-------|------|
+| `Artwork` / `ArtworkImage` | Œuvres et photos |
+| `Order` / `Reservation` | Commandes et réservations |
+| `Shipment` / `PackingChecklist` | Expédition et emballage |
+| `Setting` | Contenu éditorial + config JSON |
+| `WebhookEvent` | Idempotence webhooks |
+| `User` | Sync Supabase Auth |
+
+## Conventions services
+
+- Logique métier dans `src/services/*.service.ts` — pas dans les composants
+- Prix en **centimes** (`priceCents`, `totalCents`) — jamais euros en base
+- Transactions Prisma pour opérations liées (réservation + statut œuvre)
+- Statuts œuvre : `DRAFT` → `PUBLISHED` → `RESERVED` → `SOLD` → `ARCHIVED`
+
+## Commandes utiles
+
+```bash
+npm run db:generate   # prisma generate
+npm run db:push       # sync schéma → Supabase
+npm run db:studio     # interface visuelle
+```

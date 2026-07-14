@@ -1,0 +1,38 @@
+---
+description: Tests Vitest — conventions et fichiers de test
+globs: "**/*.test.ts,**/vitest*"
+alwaysApply: false
+---
+
+# Tests Vitest
+
+## Commandes
+
+```bash
+npm test           # vitest run (CI)
+npm run test:watch # mode interactif
+npm run test:sendcloud  # diagnostic Sendcloud (script Node)
+```
+
+## Fichiers existants
+
+- `src/lib/sendcloud/webhook.test.ts` — signature HMAC, mappers
+- `src/lib/packing/checklist-utils.test.ts` — checklist emballage
+- `src/services/shipping-estimate.service.test.ts` — fallback tarifs
+
+## Conventions
+
+- Fichiers `*.test.ts` à côté du module testé ou dans `services/`
+- Pas de tests triviaux — couvrir logique métier réelle
+- N'ajouter des tests que si demandé ou si couverture métier critique
+
+## Avant déploiement
+
+```bash
+npm test && npm run build
+```
+
+## Agent
+
+- Ne pas casser les tests existants lors de modifications
+- Mocker `process.env` dans les tests webhook, restaurer après

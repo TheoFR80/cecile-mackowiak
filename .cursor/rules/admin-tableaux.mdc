@@ -1,0 +1,40 @@
+---
+description: Admin tableaux — assistant 5 étapes, upload photos, publication
+globs: "**/admin/**/tableaux/**,**/ArtworkWizard.tsx,**/ArtworkList.tsx,**/schemas/artwork.schema.ts"
+alwaysApply: false
+---
+
+# Admin — gestion des tableaux
+
+## Routes
+
+- `/admin/tableaux` — liste
+- `/admin/tableaux/nouveau` — assistant création
+- `/admin/tableaux/[id]` — édition
+
+## Assistant 5 étapes (`ArtworkWizard`)
+
+| Étape | Contenu |
+|-------|---------|
+| 0 | Photos (upload Supabase, image principale) |
+| 1 | Titre, description, prix |
+| 2 | Dimensions œuvre + poids |
+| 3 | Dimensions **emballées** + classe transport |
+| 4 | Récapitulatif → enregistrer ou publier |
+
+## Validation
+
+- Schéma Zod : `src/schemas/artwork.schema.ts`
+- Actions : `src/app/admin/(dashboard)/tableaux/actions.ts`
+- Service : `src/services/artwork.service.ts`
+
+## Libellés (français simple)
+
+- « Ajouter un tableau », « Publier le tableau »
+- Éviter : « Créer un enregistrement produit », jargon CMS
+
+## Règles métier
+
+- `shippingClass` : `STANDARD`, `OVERSIZE`, `QUOTE_REQUIRED`
+- Dimensions emballées **obligatoires** (pas seulement œuvre)
+- Une vente par tableau — pas de suppression après vente (`SOLD` + archivage)

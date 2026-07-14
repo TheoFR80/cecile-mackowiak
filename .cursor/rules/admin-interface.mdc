@@ -1,0 +1,40 @@
+---
+description: Interface admin — dashboard, commandes, libellés et patterns communs
+globs: "src/app/admin/**,src/components/admin/**"
+alwaysApply: false
+---
+
+# Interface admin
+
+## Routes
+
+| Route | Accès | Rôle |
+|-------|-------|------|
+| `/admin` | Dashboard + carte Sendcloud | ARTIST |
+| `/admin/tableaux` | Œuvres | ARTIST |
+| `/admin/commandes` | Commandes payées/en cours | ARTIST |
+| `/admin/expeditions` | Emballage & étiquettes | ARTIST |
+| `/admin/contenu` | Textes accueil/bio | ARTIST |
+| Intégrations Sendcloud (webhook) | Bouton connexion | OWNER |
+
+## Patterns communs
+
+- Layout : `src/app/admin/(dashboard)/layout.tsx` + `AdminHeader`
+- Mutations : `actions.ts` avec `requireAdminUser()` + `revalidatePath`
+- Formulaires client : `useActionState`, erreurs avec `role="alert"`
+- Mobile-first — artiste utilise souvent son téléphone
+
+## Libellés obligatoires (CDC §17)
+
+| Utiliser | Éviter |
+|----------|--------|
+| Ajouter un tableau | Créer un enregistrement |
+| Publier le tableau | Soumettre le formulaire |
+| Le colis est prêt | — |
+| Modifier les textes du site | — |
+| Enregistrer la biographie | — |
+
+## Dashboard (`AdminDashboard`)
+
+- Stats : tableaux en vente, brouillons, colis à préparer, messages
+- Carte `SendcloudIntegrationCard` — état livraison

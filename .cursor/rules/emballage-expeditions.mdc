@@ -1,0 +1,37 @@
+---
+description: Emballage & expéditions — checklist, photos preuve, étiquettes
+globs: "**/packing/**,**/expeditions/**,**/PackingChecklistForm.tsx,**/CreateLabelButton.tsx,**/shipment*.ts"
+alwaysApply: false
+---
+
+# Emballage & expéditions
+
+## Routes admin
+
+- `/admin/expeditions` — colis à préparer
+- `/admin/expeditions/[orderId]` — checklist + photos
+
+## Flux
+
+1. Commande `PAID` → checklist emballage
+2. Artiste coche les étapes + upload photos preuve (`/api/uploads/packing`)
+3. Bouton **« Le colis est prêt »** → `notifyPackageReady()`
+4. **Ensuite seulement** : création étiquette Sendcloud (`CreateLabelButton`)
+
+## Fichiers
+
+- `src/services/packing.service.ts`
+- `src/lib/packing/checklist-utils.ts`
+- `src/lib/storage/packing-photos.ts`
+- `src/services/shipment.service.ts` — `createShipmentForOrder()`
+- `src/schemas/packing.schema.ts`
+
+## Photos obligatoires
+
+Types `PackingPhotoType` : avant emballage, en cours, colis scellé, étiquette posée
+
+## Règles CDC
+
+- Envoi créé **après** « colis prêt » — pas avant
+- Dimensions **emballées** utilisées pour l'étiquette
+- `QUOTE_REQUIRED` → `ManualQuoteShippingProvider` (pas Sendcloud auto)

@@ -1,0 +1,31 @@
+---
+description: Migrations Supabase — RLS Postgres et sync utilisateurs
+globs: "supabase/**"
+alwaysApply: false
+---
+
+# Supabase — RLS & migrations
+
+## Fichiers
+
+```
+supabase/migrations/001_auth_sync_and_rls.sql   # Auth sync + RLS de base
+supabase/migrations/002_complete_rls.sql        # RLS complète phase 9
+```
+
+## Principes RLS
+
+- Lecture publique : œuvres `PUBLISHED`, images liées
+- Écriture admin : rôles `OWNER` / `ARTIST` via JWT `app_metadata.role`
+- Prisma côté serveur utilise `DATABASE_URL` (bypass RLS via service) — RLS protège l'accès direct Supabase client
+
+## Sync utilisateurs
+
+- Trigger/fonction sync `auth.users` → `public.users`
+- Rôle stocké en Prisma `User.role` après connexion (`syncUserFromAuth`)
+
+## Agent
+
+- Schéma Prisma = source de vérité applicative (`prisma/schema.prisma`)
+- Migrations SQL dans `supabase/migrations/` pour RLS et auth — pas de migration Prisma séparée si `db:push` utilisé
+- Après changement schéma : `npm run db:push` avec `DATABASE_URL` valide

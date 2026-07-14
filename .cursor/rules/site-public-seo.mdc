@@ -1,0 +1,39 @@
+---
+description: Site public — pages vitrine, galerie, légal et SEO
+globs: "src/app/(public)/**,src/app/robots.ts,src/app/sitemap.ts,src/components/public/**,src/components/GalleryPreview.tsx"
+alwaysApply: false
+---
+
+# Site public & SEO
+
+## Pages
+
+| Route | Contenu |
+|-------|---------|
+| `/` | Hero éditable + sélection œuvres |
+| `/galerie` | Catalogue filtrable (`GalleryFilters`) |
+| `/tableaux/[slug]` | Fiche œuvre + achat |
+| `/artiste`, `/biographie` | Biographie éditable |
+| `/contact` | Formulaire contact |
+| `/livraison` | Infos transport |
+| `/suivi/[orderNumber]` | Suivi commande |
+| `/mentions-legales`, `/confidentialite`, etc. | Pages légales (`LegalPage`) |
+
+## Conventions
+
+- Server Components par défaut — fetch Prisma/content.service côté serveur
+- `next/image` avec `sizes` adaptés mobile
+- Prix : `Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })`
+- Textes UI en **français** ; slugs/identifiants en anglais
+- Œuvres affichées : statut `PUBLISHED` uniquement
+
+## SEO
+
+- `src/app/robots.ts`, `src/app/sitemap.ts`
+- Metadata dans `layout.tsx` / pages (`title`, `description`)
+- `alt` descriptif sur chaque image tableau
+
+## Design
+
+- Élégant, épuré — **tableaux en avant**
+- Palette sobre, serif pour titres, mobile-first

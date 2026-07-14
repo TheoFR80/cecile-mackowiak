@@ -1,0 +1,39 @@
+---
+description: Stripe — Checkout, webhooks signés et confirmation paiement
+globs: "**/stripe/**,**/webhooks/stripe/**,**/checkout/create/**"
+alwaysApply: false
+---
+
+# Stripe — paiement
+
+## Fichiers
+
+- `src/lib/stripe/client.ts` — `getStripe()`, `isStripeConfigured()`
+- `src/app/api/checkout/create/route.ts` — création session Checkout
+- `src/app/api/webhooks/stripe/route.ts` — confirmation paiement
+
+## Variables `.env`
+
+```
+STRIPE_SECRET_KEY=
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=
+STRIPE_WEBHOOK_SECRET=
+```
+
+## Webhook production
+
+URL : `https://cecile-mackowiak.srv962831.hstgr.cloud/api/webhooks/stripe`
+
+Événements : `checkout.session.completed` (principal)
+
+## Règles
+
+- Signature `stripe-signature` obligatoire (`constructEvent`)
+- Idempotence via `webhook_events` (`STRIPE` + `event.id`)
+- Au paiement : `Order.paymentStatus = PAID`, `Artwork.status = SOLD`, `notifyOrderPaid()`
+- Montants Stripe en centimes — recalculés serveur, pas depuis le formulaire client
+
+## Agent
+
+- Clés Stripe jamais commitées
+- Après ajout clés prod : configurer webhook dans dashboard Stripe + redéployer VPS

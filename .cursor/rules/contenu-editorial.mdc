@@ -1,0 +1,41 @@
+---
+description: Contenu éditorial — accueil et biographie éditables par l'artiste
+globs: "**/contenu/**,**/content/**,**/content.service.ts,**/content.schema.ts,**/SiteContentForms.tsx"
+alwaysApply: false
+---
+
+# Contenu éditorial
+
+## Clés Setting (table Prisma)
+
+| Clé | Page publique |
+|-----|---------------|
+| `content.homepage` | `/` — hero, textes accueil |
+| `content.artiste` | `/artiste`, `/biographie` |
+
+## Fichiers
+
+- Types : `src/types/content.ts`
+- Defaults : `src/lib/content/defaults.ts` (fallback si rien en base)
+- Service : `src/services/content.service.ts`
+- Schéma Zod : `src/schemas/content.schema.ts`
+- Admin : `src/components/admin/SiteContentForms.tsx`
+- Actions : `src/app/admin/(dashboard)/contenu/actions.ts`
+
+## Pattern admin
+
+```typescript
+// actions.ts
+await requireAdminUser();
+// validation Zod → content.service → revalidatePath("/") + "/artiste"
+```
+
+## Biographie
+
+- Paragraphes séparés par **ligne vide** dans le textarea admin
+- Rôle `ARTIST` autorisé (pas seulement OWNER)
+
+## Agent
+
+- Pas de CMS externe — JSON en table `Setting` uniquement
+- Toujours valider avec Zod avant `upsert`

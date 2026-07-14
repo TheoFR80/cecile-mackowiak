@@ -1,0 +1,62 @@
+---
+description: Intégration Sendcloud — devis, étiquettes, webhooks et configuration
+globs: "**/sendcloud/**,**/shipping/**,**/shipment*.ts,**/shipping-quote*.ts,**/api/webhooks/sendcloud/**,**/api/shipping/**,.env.example,docker-compose*.yml"
+alwaysApply: false
+---
+
+# Sendcloud — livraison multitransporteur
+
+## Rôle
+
+Sendcloud est le **seul** fournisseur transporteur (pas Chronopost/UPS/DHL séparés). Il gère devis, étiquettes et suivi. Les très grands formats passent par `MANUAL_QUOTE` (`ManualQuoteShippingProvider`).
+
+## Fichiers clés
+
+| Fichier | Rôle |
+|---------|------|
+| `src/lib/sendcloud/provider.ts` | API v3 — devis, création colis, étiquette |
+| `src/lib/sendcloud/client.ts` | Auth Basic, `isSendcloudConfigured()` |
+| `src/lib/sendcloud/sender-config.ts` | Adresse expéditeur (env `SENDCLOUD_SENDER_*`) |
+| `src/lib/sendcloud/health.ts` | Diagnostic connexion |
+| `src/lib/sendcloud/setup.ts` | Activation webhook via API |
+| `src/services/shipping-quote.service.ts` | Devis checkout (Sendcloud ou fallback) |
+| `src/services/shipment.service.ts` | Création envoi après « colis prêt » |
+
+## Variables `.env` (jamais commitées)
+
+```
+SENDCLOUD_PUBLIC_KEY=
+SENDCLOUD_SECRET_KEY=
+SENDCLOUD_WEBHOOK_SECRET=          # optionnel — fallback sur SECRET_KEY
+SENDCLOUD_DEFAULT_CONTRACT_ID=     # optionnel
+SENDCLOUD_SENDER_FIRST_NAME=
+SENDCLOUD_SENDER_LAST_NAME=
+SENDCLOUD_SENDER_STREET=
+SENDCLOUD_SENDER_POSTAL_CODE=
+SENDCLOUD_SENDER_CITY=
+SENDCLOUD_SENDER_COUNTRY=FR
+SENDCLOUD_SENDER_PHONE=
+SENDCLOUD_SENDER_EMAIL=
+```
+
+## Webhook production
+
+URL : `https://cecile-mackowiak.srv962831.hstgr.cloud/api/webhooks/sendcloud`
+
+- Signature HMAC SHA256 via header `Sendcloud-Signature`
+- Activation : bouton admin OWNER ou `configureSendcloudWebhook()` dans `setup.ts`
+- Test local : `npm run test:sendcloud`
+
+## Règles métier
+
+- Devis réel Sendcloud uniquement si clés API **et** adresse expéditeur complètes
+- Sinon → `estimateShippingPrice()` (fallback)
+- `QUOTE_REQUIRED` → pas de devis auto (devis manuel)
+- Envoi créé **après** confirmation emballage par l'artiste
+- Dimensions **emballées** obligatoires pour le calcul colis
+
+## Comportement agent
+
+- Ne jamais committer les clés Sendcloud
+- Après ajout des clés en prod : redéployer VPS (`VPS_createNewProjectV1`) puis activer le webhook
+- Carte diagnostic : `SendcloudIntegrationCard` sur `/admin`

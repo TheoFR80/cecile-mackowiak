@@ -1,0 +1,29 @@
+---
+description: Index des règles Cursor — référence rapide par domaine
+alwaysApply: true
+---
+
+# Index des règles du projet
+
+| Règle | Domaine | Quand |
+|-------|---------|-------|
+| `projet-cecile-mackowiak` | Contexte global, stack, VPS | Toujours |
+| `feuille-de-route-cdc` | Phases, priorités, décisions CDC | Toujours |
+| `regles-index` | Cette table | Toujours |
+| `securite-donnees` | Secrets, `.gitignore`, données perso | Toujours |
+| `nextjs-frontend` | Composants, pages, UI | `*.{tsx,ts,css}` |
+| `supabase-auth` | Auth admin, rôles, middleware | `auth/**`, `middleware.ts` |
+| `supabase-storage-images` | Photos tableaux & emballage | `storage/**`, `uploads/**` |
+| `supabase-rls` | Migrations RLS Postgres | `supabase/migrations/**` |
+| `prisma-database` | Schéma, services, Prisma | `prisma/**`, `services/**` |
+| `admin-tableaux` | Assistant 5 étapes, œuvres | `tableaux/**`, `ArtworkWizard` |
+| `admin-interface` | Dashboard, commandes, libellés | `src/app/admin/**` |
+| `contenu-editorial` | Accueil & biographie éditables | `contenu/**`, `content.*` |
+| `commandes-checkout` | Panier, réservation, commandes | `order*`, `checkout/**` |
+| `stripe-paiement` | Stripe Checkout & webhooks | `stripe/**`, `webhooks/stripe` |
+| `sendcloud-livraison` | Devis, étiquettes, suivi colis | `sendcloud/**`, `shipping/**` |
+| `emballage-expeditions` | Checklist, photos preuve, étiquettes | `packing/**`, `expeditions/**` |
+| `emails-notifications` | Resend, e-mails transactionnels | `email/**`, `notification*` |
+| `site-public-seo` | Pages légales, galerie, SEO | `app/(public)/**`, `robots.ts` |
+| `tests-vitest` | Tests unitaires | `**/*.test.ts`, `vitest*` |
+| `docker-deploy` | VPS Hostinger, Traefik, compose | `docker-compose*`, `Dockerfile*` |

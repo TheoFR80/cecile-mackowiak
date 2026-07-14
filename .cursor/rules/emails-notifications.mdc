@@ -1,0 +1,40 @@
+---
+description: E-mails transactionnels — Resend et notifications commandes
+globs: "**/email/**,**/notification*.ts"
+alwaysApply: false
+---
+
+# E-mails & notifications
+
+## Provider
+
+- **Resend** via `src/lib/email/client.ts`
+- Templates HTML : `src/lib/email/templates/orders.ts`
+- Orchestration : `src/services/notification.service.ts`
+
+## Variables `.env`
+
+```
+RESEND_API_KEY=
+EMAIL_FROM=                    # ex. Cécile <noreply@cecile-mackowiak.fr>
+ADMIN_EMAIL=                   # destinataire alertes
+```
+
+## E-mails envoyés
+
+| Événement | Destinataire |
+|-----------|--------------|
+| Commande payée | Client + admin/artiste |
+| Colis prêt | Admin/artiste |
+| Expédié | Client |
+| Livré | Client |
+
+## Comportement
+
+- Si Resend non configuré : `isEmailConfigured()` → envoi silencieusement ignoré (pas d'erreur bloquante)
+- Admin emails : `ADMIN_EMAIL` + utilisateurs Prisma `OWNER`/`ARTIST` actifs
+
+## Agent
+
+- Ne jamais committer `RESEND_API_KEY`
+- Textes e-mails en **français**, ton sobre et professionnel

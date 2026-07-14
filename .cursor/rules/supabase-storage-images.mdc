@@ -1,0 +1,35 @@
+---
+description: Supabase Storage — photos tableaux et preuves d'emballage
+globs: "**/storage/**,**/api/uploads/**,next.config.ts"
+alwaysApply: false
+---
+
+# Supabase Storage — images
+
+## Buckets
+
+| Bucket | Usage | Limite |
+|--------|-------|--------|
+| `artworks` | Photos tableaux (admin) | 10 Mo, JPEG/PNG/WebP/HEIC |
+| `packing` | Photos emballage (preuve) | idem |
+
+## Flux tableaux
+
+1. Admin `ArtworkWizard` → `POST /api/uploads` (auth requise)
+2. `uploadArtworkImage()` → bucket `artworks/{artworkId}/...`
+3. URL publique enregistrée en `ArtworkImage.url` + `publicId`
+4. Affichage : `next/image` — domaine `*.supabase.co` dans `next.config.ts`
+
+## Fichiers clés
+
+- `src/lib/storage/artwork-images.ts`
+- `src/lib/storage/packing-photos.ts`
+- `src/app/api/uploads/route.ts`
+- `src/app/api/uploads/packing/route.ts`
+
+## Règles
+
+- Bucket créé auto au premier upload (`ensureArtworksBucket`)
+- Service role key requise côté serveur (pas anon key)
+- Photos HD **hors repo Git** — uniquement Supabase Storage
+- Minimum 1 photo pour publier un tableau

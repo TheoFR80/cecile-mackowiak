@@ -1,0 +1,46 @@
+---
+description: Auth Supabase — connexion admin, rôles, middleware et session
+globs: "**/auth/**,**/middleware.ts,src/app/admin/**/login/**,supabase/migrations/**"
+alwaysApply: false
+---
+
+# Supabase Auth — admin
+
+## Fichiers
+
+| Fichier | Rôle |
+|---------|------|
+| `src/lib/auth/supabase/client.ts` | Client browser |
+| `src/lib/auth/supabase/server.ts` | Client serveur (cookies) |
+| `src/lib/auth/supabase/middleware.ts` | Refresh session |
+| `src/lib/auth/session.ts` | `requireAdminUser()`, `requireOwnerUser()` |
+| `src/lib/auth/roles.ts` | `getRoleFromUser()` depuis `app_metadata` |
+| `src/lib/auth/sync-user.ts` | Sync `auth.users` → table Prisma `User` |
+
+## Rôles
+
+```typescript
+// ✅ Rôle lu depuis app_metadata uniquement
+user.app_metadata?.role  // "OWNER" | "ARTIST" | "CUSTOMER"
+```
+
+## Protection routes
+
+- Middleware : toutes les routes `/admin/*` sauf `/admin/login`
+- Server actions : `requireAdminUser()` minimum ; `requireOwnerUser()` pour intégrations techniques
+- Pas de lien public vers `/admin/login` dans le menu
+
+## Variables requises
+
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=    # uploads storage + admin server
+```
+
+> `NEXT_PUBLIC_*` doivent être présentes au **build ET runtime** en production.
+
+## Comptes production
+
+- `artiste@cecile-mackowiak.fr` → `ARTIST`
+- `admin@cecile-mackowiak.fr` → `OWNER`

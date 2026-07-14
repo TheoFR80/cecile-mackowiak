@@ -1,0 +1,35 @@
+---
+description: Commandes & checkout — réservation, panier, une vente par œuvre
+globs: "**/order*.ts,**/checkout/**,**/CheckoutForm.tsx,**/schemas/checkout.schema.ts"
+alwaysApply: false
+---
+
+# Commandes & checkout
+
+## Flux achat
+
+1. Client choisit tableau → `/commande/[slug]`
+2. `POST /api/checkout/create` → réservation 30 min + commande `PENDING_PAYMENT`
+3. Redirection Stripe Checkout
+4. Webhook Stripe `checkout.session.completed` → `PAID`, œuvre `SOLD`
+5. E-mail confirmation + notification admin
+
+## Fichiers clés
+
+- `src/services/order.service.ts` — `createCheckoutOrder()`, `releaseExpiredReservations()`
+- `src/app/api/checkout/create/route.ts`
+- `src/components/public/CheckoutForm.tsx`
+- `src/schemas/checkout.schema.ts`
+
+## Règles métier critiques
+
+- **Une seule vente** par tableau (réservation + webhook)
+- Réservation expire après **30 minutes** → œuvre repasse `PUBLISHED`
+- Prix calculés **côté serveur** en centimes — ne jamais faire confiance au client
+- Vente confirmée **uniquement** par webhook Stripe signé
+- Numéro commande : `CM-YYYYMMDD-XXXX`
+
+## Devis livraison
+
+- `getShippingQuoteForArtwork()` dans `shipping-quote.service.ts`
+- `POST /api/shipping/rates` pour estimation avant checkout
